@@ -1,0 +1,3 @@
+[submodule "share-pay"]
+	path = share-pay
+	url = https://github.com/SDavidson1177/share-pay
