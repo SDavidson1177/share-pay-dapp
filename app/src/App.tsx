@@ -1,10 +1,11 @@
-import { useState, useEffect} from 'react'
+import { useState, useEffect, useRef} from 'react'
 import './App.css'
 import {WalletState} from '@web3-onboard/core'
 import metamaskSDK from '@web3-onboard/metamask'
 import { init, useConnectWallet, useSetChain } from '@web3-onboard/react'
 import injectedModule from '@web3-onboard/injected-wallets'
 import { ethers } from 'ethers'
+import SharePayABI from "../../share-pay/out/SharePay.sol/SharePay.abi.json" with { type: "json" };
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -39,15 +40,20 @@ init({
 })
 
 function App() {
+  // Environment
+  const [contractAddress, setContractAddress] = useState<string>(import.meta.env.VITE_CONTRACT_ADDRESS)
+
   // App labels
-  const [chainIdMap, setChainIdMap] = useState<Map<string, string>>(new Map<string, string>());
+  const [chainIdMap, setChainIdMap] = useState<Map<string, string>>(new Map<string, string>())
 
   // Wallet
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
   const [{connectedChain}] = useSetChain()
 
-  // Ethers provider
-  let ethersProvider
+  // Ethers
+  const ethersProvider = useRef<ethers.BrowserProvider>()
+  const signer = useRef<ethers.JsonRpcSigner>()
+  const contract = useRef<ethers.Contract>()
 
   const connect_wallet = async () => {
     let w: Promise<WalletState>
@@ -58,10 +64,6 @@ function App() {
     } else {
       w = Promise.resolve(wallet)
     }
-    
-    w!.then((v) => {
-      ethersProvider = new ethers.BrowserProvider(v.provider, 'any')
-    })
   };
 
   const disconnect_wallet = async () => {
@@ -70,12 +72,48 @@ function App() {
     }
   }
 
+  // Interact with contract
+  const deposit = async () => {
+    await ethersProvider.current?.getBlockNumber().then((v) => {
+      console.log(`Block: ${v}`)
+    })
+
+    let tx: ethers.ContractTransaction
+    await contract.current?.deposit.populateTransaction().then((v) => {
+      tx = v
+      tx.value = ethers.parseEther("10")
+    })
+
+    await signer.current?.sendTransaction(tx!)
+  }
+
+  const balance = async () => {
+    await contract.current?.balance().then((v) => {
+      alert(v)
+    })
+  }
+
   // Set the chain mapping
   useEffect(() => {
     let chain_map = new Map<string, string>()
     chains.forEach((v) => {chain_map.set(v.id, v.label)})
     setChainIdMap(chain_map)
   }, [])
+
+  // When connected to a new chain, update provider and signer
+  useEffect(() => {
+    for (let i = 0; i < chains.length; i++) {
+      console.log(chains[i].id + " | " + connectedChain?.id);
+      if (chains[i].id == connectedChain?.id) {
+        ethersProvider.current = new ethers.BrowserProvider(wallet?.provider!, 'any')
+        ethersProvider.current.getSigner(wallet?.accounts[0].address).then((v) => {
+          signer.current = v
+          contract.current = new ethers.Contract(contractAddress, SharePayABI, signer.current)
+        })
+        break
+      }
+    }
+  }, [connectedChain])
 
   return (
     <>
@@ -89,6 +127,13 @@ function App() {
           <h3>Chain: {connectedChain?.id && 
           (chainIdMap.get(connectedChain?.id) ? chainIdMap.get(connectedChain?.id) : "Unsupported")}</h3>
           <h3>Wallet: {wallet.accounts[0].address}</h3>
+          <h3>Contract Address: {contractAddress}</h3>
+          <button style={{ padding: 10, margin: 10 }} onClick={deposit}>
+            Deposit
+          </button>
+          <button style={{ padding: 10, margin: 10 }} onClick={balance}>
+            Balance
+          </button>
           <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
             Disconnect
           </button>
