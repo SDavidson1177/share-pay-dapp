@@ -2,6 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState, useEffect, useRef} from 'react'
 import { Denominations, DenomMultiplier} from '../shared/constants';
 import { ethers } from 'ethers'
+import { FormUnit } from '../shared/form';
 
 export function BillPanel({contract, signer} : {contract: ethers.Contract | undefined, signer: ethers.JsonRpcSigner | undefined}) {
     const {
@@ -33,14 +34,7 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
                     Cost:
                     <input type='number' {...register("cost")}></input>
                 </label>
-                <label>
-                    Unit:
-                    <select {...register("unit")}>
-                        <option value={Denominations.WEI}>wei</option>
-                        <option value={Denominations.GWEI}>gwei</option>
-                        <option value={Denominations.ETHER}>ether</option>
-                    </select>
-                </label><br></br>
+                <FormUnit register={register}></FormUnit><br></br>
                 <button type='submit' >Create</button>
             </form>
         </>)

@@ -5,3 +5,4 @@ export enum Denominations {
 }
 
 export const DenomMultiplier = new Map<Denominations, string>([[Denominations.WEI, "wei"], [Denominations.GWEI, "gwei"], [Denominations.ETHER, "ether"]])
+export  const Units = ["wei", "gwei", "ether"]

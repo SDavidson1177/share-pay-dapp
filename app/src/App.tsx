@@ -1,12 +1,12 @@
 import { useState, useEffect, useRef} from 'react'
 import './App.css'
-import {WalletState} from '@web3-onboard/core'
 import metamaskSDK from '@web3-onboard/metamask'
 import { init, useConnectWallet, useSetChain } from '@web3-onboard/react'
 import injectedModule from '@web3-onboard/injected-wallets'
 import { ethers } from 'ethers'
 import SharePayABI from "../../share-pay/out/SharePay.sol/SharePay.abi.json" with { type: "json" };
 import { BillPanel } from "./components/owner/Bill"
+import { Deposit } from './components/shared/DepositWithdraw'
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -120,12 +120,7 @@ function App() {
           (chainIdMap.get(connectedChain?.id) ? chainIdMap.get(connectedChain?.id) : "Unsupported")}</h3>
           <h3>Wallet: {wallet.accounts[0].address}</h3>
           <h3>Contract Address: {contractAddress}</h3>
-          <button style={{ padding: 10, margin: 10 }} onClick={deposit}>
-            Deposit
-          </button>
-          <button style={{ padding: 10, margin: 10 }} onClick={balance}>
-            Balance
-          </button>
+          <Deposit contract={contract.current} signer={signer.current}></Deposit>
 
           {/* Bill Interaction */}
           <BillPanel contract={contract.current} signer={signer.current}/>
