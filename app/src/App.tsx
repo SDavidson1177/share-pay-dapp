@@ -7,6 +7,7 @@ import { ethers } from 'ethers'
 import SharePayABI from "../../share-pay/out/SharePay.sol/SharePay.abi.json" with { type: "json" };
 import { BillPanel } from "./components/owner/Bill"
 import { Deposit } from './components/shared/DepositWithdraw'
+import { weiToEther } from './utils/operations'
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -50,6 +51,7 @@ function App() {
   // Wallet
   const [{ wallet, connecting }, connect, disconnect] = useConnectWallet()
   const [{connectedChain}] = useSetChain()
+  const [balance, setBalance] = useState<bigint>(0n)
 
   // Ethers
   const ethersProvider = useRef<ethers.BrowserProvider>()
@@ -68,25 +70,9 @@ function App() {
     }
   }
 
-  // Interact with contract
-  const deposit = async () => {
-    let tx: ethers.ContractTransaction
-    await contract.current?.deposit.populateTransaction().then((v) => {
-      tx = v
-      tx.value = ethers.parseEther("10")
-    })
-
-    await signer.current?.sendTransaction(tx!)
-  }
-
-  const balance = async () => {
-    await contract.current?.balance().then((v) => {
-      alert(v)
-    })
-  }
-
-  // Set the chain mapping
+  // Initialize
   useEffect(() => {
+    // Set the chain mapping
     let chain_map = new Map<string, string>()
     chains.forEach((v) => {chain_map.set(v.id, v.label)})
     setChainIdMap(chain_map)
@@ -120,7 +106,10 @@ function App() {
           (chainIdMap.get(connectedChain?.id) ? chainIdMap.get(connectedChain?.id) : "Unsupported")}</h3>
           <h3>Wallet: {wallet.accounts[0].address}</h3>
           <h3>Contract Address: {contractAddress}</h3>
-          <Deposit contract={contract.current} signer={signer.current}></Deposit>
+          <h3>SharePay Balance: {balance ? weiToEther(balance) : 0} ETH</h3>
+          <Deposit contract={contract.current} signer={signer.current} setBalance={(v: bigint) => {
+            setBalance(v);
+          }}></Deposit>
 
           {/* Bill Interaction */}
           <BillPanel contract={contract.current} signer={signer.current}/>
