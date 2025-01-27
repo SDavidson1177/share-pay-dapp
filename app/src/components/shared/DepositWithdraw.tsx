@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { useForm, UseFormHandleSubmit, FieldValues } from 'react-hook-form';
 import { FormUnit } from './form';
 import { ethers } from 'ethers'
@@ -25,9 +25,15 @@ export function Deposit({contract, signer, setBalance} : {contract: ethers.Contr
 
         let conf = await signer?.sendTransaction(tx!)
         await conf?.wait()
-
-        getBalance()
     }
+
+    const withdraw = async (data: any) => {
+        let conf = await contract?.withdraw(ethers.parseUnits(data.amount.toString(), Units[data.unit]))
+        await conf?.wait()
+    }
+
+    const caller = useRef<string>("");
+
 
     // Initialize
     useEffect(() => {
@@ -35,19 +41,35 @@ export function Deposit({contract, signer, setBalance} : {contract: ethers.Contr
         getBalance()
     }, [])
 
+    const submitForm = async (data: any) => {
+        switch(caller.current) {
+            case "deposit-button":
+                await deposit(data)
+                break
+            case "withdraw-button":
+                await withdraw(data)
+                break
+        }
+
+        getBalance()
+    }
+
     return (<>
-        <form onSubmit={handleSubmit(deposit)}>
+        <form id="deposit-withdraw-form" onSubmit={handleSubmit(submitForm)}>
             <label>
                 Amount:
                 <input type='number' {...register("amount")}></input>
             </label>
             <FormUnit register={register}></FormUnit><br></br>
-            <button type='submit' style={{ padding: 10, margin: 10 }}>
+            <button onClick={() => {caller.current = "deposit-button"}} id="deposit-button" type='submit' style={{ padding: 10, margin: 10 }}>
                 Deposit
+            </button>
+            <button onClick={() => {caller.current = "withdraw-button"}} id="withdraw-button" type='submit' style={{ padding: 10, margin: 10 }}>
+                Withdraw
             </button>
         </form>
         <button onClick={getBalance} style={{ padding: 10, margin: 10 }}>
-            Balance
+            Update Balance
         </button>
     </>)
 }
