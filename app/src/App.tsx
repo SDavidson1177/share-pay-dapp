@@ -6,6 +6,7 @@ import { init, useConnectWallet, useSetChain } from '@web3-onboard/react'
 import injectedModule from '@web3-onboard/injected-wallets'
 import { ethers } from 'ethers'
 import SharePayABI from "../../share-pay/out/SharePay.sol/SharePay.abi.json" with { type: "json" };
+import { BillPanel } from "./components/owner/Bill"
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -56,13 +57,8 @@ function App() {
   const contract = useRef<ethers.Contract>()
 
   const connect_wallet = async () => {
-    let w: Promise<WalletState>
     if (!wallet) {
-      await connect().then((v) => {
-        w = Promise.resolve(v[0])
-      })
-    } else {
-      w = Promise.resolve(wallet)
+      await connect()
     }
   };
 
@@ -74,10 +70,6 @@ function App() {
 
   // Interact with contract
   const deposit = async () => {
-    await ethersProvider.current?.getBlockNumber().then((v) => {
-      console.log(`Block: ${v}`)
-    })
-
     let tx: ethers.ContractTransaction
     await contract.current?.deposit.populateTransaction().then((v) => {
       tx = v
@@ -134,6 +126,10 @@ function App() {
           <button style={{ padding: 10, margin: 10 }} onClick={balance}>
             Balance
           </button>
+
+          {/* Bill Interaction */}
+          <BillPanel contract={contract.current} signer={signer.current}/>
+
           <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
             Disconnect
           </button>
