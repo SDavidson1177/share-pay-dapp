@@ -1,0 +1,39 @@
+$border-colour: #2222228f;
+
+.bill-panel {  
+    margin: auto;
+    border: 2px solid $border-colour;
+    border-radius: 25px;
+    width: 80%;
+
+    .bill-panel-title {
+        margin-top: 2%;
+        margin-bottom: 0%;
+        padding-bottom: 0%;
+    }
+
+    .bill-panel-cost {
+        margin-top: 0%;
+        padding-top: 0%;
+        margin-left: 5%;
+        text-align: left;
+    }
+
+    .bill-panel-metadiv {
+        width: 40%;
+        display: inline-block;
+    }
+
+    .bill-panel-req:hover{
+        color: #646cff;
+    }
+
+    .bill-panel-pay {
+        border: 2px solid $border-colour;
+        margin-bottom: 10px;
+
+        &:hover {
+            border-color: #646cff;
+        }
+    }
+}

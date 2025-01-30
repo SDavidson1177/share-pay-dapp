@@ -8,6 +8,7 @@ import SharePayABI from "../../share-pay/out/SharePay.sol/SharePay.abi.json" wit
 import { BillPanel } from "./components/owner/Bill"
 import { Deposit } from './components/shared/DepositWithdraw'
 import { weiToEther } from './utils/operations'
+import { RequestJoin } from './components/participant/RequestJoin'
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -132,6 +133,8 @@ function App() {
 
           {/* Bill Interaction */}
           <BillPanel contract={contract.current} signer={signer.current}/>
+
+          <RequestJoin contract={contract.current} signer={signer.current}/>
 
           <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
             Disconnect

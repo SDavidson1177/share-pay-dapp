@@ -7,5 +7,15 @@ export function weiToEther(a: bigint) :string {
     }
 
     let insert: number = val.length - exp
-    return val.substring(0, insert) + "." + val.substring(insert)
+    let full = val.substring(0, insert) + "." + val.substring(insert)
+
+    // truncate trailing zeros
+    let i = full.length - 1
+    for (; full[i] == "0"; i--) {
+    }
+    if (full[i] == ".") {
+        i--
+    }
+
+    return i == full.length ? full : full.substring(0, i+1)
 }
