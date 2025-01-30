@@ -39,7 +39,7 @@ export function Deposit({contract, signer, setBalance} : {contract: ethers.Contr
     useEffect(() => {
         // Get initial balance
         getBalance()
-    }, [])
+    }, [signer, contract])
 
     const submitForm = async (data: any) => {
         switch(caller.current) {

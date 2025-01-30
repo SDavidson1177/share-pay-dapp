@@ -58,6 +58,9 @@ function App() {
   const signer = useRef<ethers.JsonRpcSigner>()
   const contract = useRef<ethers.Contract>()
 
+  // Components
+  const [rerender, setRerender] = useState<boolean>(false)
+
   const connect_wallet = async () => {
     if (!wallet) {
       await connect()
@@ -78,6 +81,9 @@ function App() {
     setChainIdMap(chain_map)
   }, [])
 
+  // Rerender
+  useEffect(() => {}, [rerender])
+
   // When connected to a new chain, update provider and signer
   useEffect(() => {
     for (let i = 0; i < chains.length; i++) {
@@ -92,6 +98,19 @@ function App() {
       }
     }
   }, [connectedChain])
+
+  // When connecting to a new wallet, update the signer
+  useEffect(() => {
+    if (ethersProvider.current) {
+      ethersProvider.current.getSigner(wallet?.accounts[0].address).then((v) => {
+        if (signer.current == undefined || v.address != signer.current.address) {
+          signer.current = v
+          contract.current = new ethers.Contract(contractAddress, SharePayABI, signer.current)
+          setRerender(!rerender)
+        }
+      })
+    }
+  }, [wallet])
 
   return (
     <>
