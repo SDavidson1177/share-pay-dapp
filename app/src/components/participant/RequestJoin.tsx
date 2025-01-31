@@ -1,7 +1,8 @@
+import { useRef } from 'react';
 import { ethers } from 'ethers'
 import { useForm } from 'react-hook-form';
 
-export function RequestJoin({contract, signer} : {contract: ethers.Contract | undefined, signer: ethers.JsonRpcSigner | undefined}) {
+export function RequestJoin({contract, signer, rerender} : {contract: ethers.Contract | undefined, signer: ethers.JsonRpcSigner | undefined, rerender: any}) {
     const {
         register,
         handleSubmit,
@@ -10,6 +11,7 @@ export function RequestJoin({contract, signer} : {contract: ethers.Contract | un
     const request_to_join = async (data: any) => {
         let tx = await contract?.requestToJoin(ethers.getAddress(data.owner), data.title)
         await tx.wait()
+        rerender()
         console.log(tx)
     }
 

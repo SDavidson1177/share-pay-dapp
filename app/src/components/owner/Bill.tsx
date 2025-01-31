@@ -6,15 +6,7 @@ import { FormUnit } from '../shared/form';
 import { Result } from 'ethers';
 import { weiToEther } from '../../utils/operations';
 import "./Bill.scss"
-
-interface Bill {
-    owner: string,
-    key: string
-    title: string
-    amount: bigint
-    participants: string[]
-    requests: string[]
-}
+import { Bill } from '../shared/interfaces';
 
 function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contract: ethers.Contract | 
     undefined, signer: ethers.JsonRpcSigner | undefined}) {
@@ -35,6 +27,8 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
             // submit the transactions
             let tx = await contract?.acceptRequest(title, requester)
             console.log(tx)
+
+            // TODO: rerender
         }
     }
 
@@ -43,8 +37,8 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
         console.log(tx)
     }
 
-    return (<>{bills?.map(v => {return(<>
-            <div className='bill-panel'>
+    return (<>{bills?.map(v => {return(
+            <div key={v.title} className='bill-panel'>
                 <h3 className='bill-panel-title'>{v.title}</h3>
                 <div className='bill-panel-metadiv'>
                     <p className='bill-panel-cost'>Cost: {weiToEther(v.amount)} ETH</p>
@@ -55,22 +49,21 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                 <h4>Owner</h4>
                 <p>{v.owner == signer?.address ? "me" : v.owner}</p>
                 <h4>Participants</h4>
-                {v.participants.map(part => 
-                    <p>{part}</p>
+                {v.participants.map((part, i) => 
+                    <p key={i}>{part}</p>
                 )}
                 
                 {v.owner == signer?.address && <>
                 {v.requests.length > 0 && <>
                     <h4>Requests</h4>
-                    {v.requests.map(req => 
-                        <p className='bill-panel-req' onClick={(e) => {accept_request(e, v.title, req)}}>{req}</p>
+                    {v.requests.map((req, i) => 
+                        <p key={i} className='bill-panel-req' onClick={(e) => {accept_request(e, v.title, req)}}>{req}</p>
                     )}
                 </>}
                 <form onSubmit={handleSubmit(accept_payment)}>
                         <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
                 </form></>}
-            </div>
-        </>)})}
+            </div>)})}
     </>)
 }
 
@@ -120,7 +113,9 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
 
     // Initialize
     useEffect(() => {
-        list_bills()
+        if (signer) {
+            list_bills()
+        }
     }, [signer, contract])
 
     return (<>

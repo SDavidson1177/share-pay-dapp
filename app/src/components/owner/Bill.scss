@@ -1,8 +1,8 @@
-$border-colour: #2222228f;
+@use '../../theme.scss';
 
 .bill-panel {  
     margin: auto;
-    border: 2px solid $border-colour;
+    border: 2px solid theme.$border-colour;
     border-radius: 25px;
     width: 80%;
 
@@ -25,15 +25,15 @@ $border-colour: #2222228f;
     }
 
     .bill-panel-req:hover{
-        color: #646cff;
+        color: theme.$button-hover-colour;
     }
 
     .bill-panel-pay {
-        border: 2px solid $border-colour;
+        border: 2px solid theme.$border-colour;
         margin-bottom: 10px;
 
         &:hover {
-            border-color: #646cff;
+            border-color: theme.$button-hover-colour;
         }
     }
 }

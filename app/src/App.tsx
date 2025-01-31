@@ -9,6 +9,7 @@ import { BillPanel } from "./components/owner/Bill"
 import { Deposit } from './components/shared/DepositWithdraw'
 import { weiToEther } from './utils/operations'
 import { RequestJoin } from './components/participant/RequestJoin'
+import { PendingRequests } from './components/participant/PendingRequests'
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -61,6 +62,10 @@ function App() {
 
   // Components
   const [rerender, setRerender] = useState<boolean>(false)
+  const [pendingRerender, setPendingRerender] = useState<boolean>(false)
+  const renderPendingRequests = () => {
+    setPendingRerender(!pendingRerender)
+  }
 
   const connect_wallet = async () => {
     if (!wallet) {
@@ -134,7 +139,9 @@ function App() {
           {/* Bill Interaction */}
           <BillPanel contract={contract.current} signer={signer.current}/>
 
-          <RequestJoin contract={contract.current} signer={signer.current}/>
+          <RequestJoin contract={contract.current} signer={signer.current} rerender={renderPendingRequests}/>
+
+          <PendingRequests contract={contract.current} signer={signer.current} rerender={pendingRerender}/>
 
           <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
             Disconnect

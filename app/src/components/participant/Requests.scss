@@ -1,0 +1,19 @@
+@use '../../theme.scss';
+
+.pending-request {
+    border: 2px solid theme.$border-colour;
+    border-radius: 10px;
+    
+    p {
+        display: inline-block;
+        padding-right: 2%;
+    }
+
+    button {
+        border: 2px solid theme.$border-colour;
+
+        &:hover {
+            border-color: theme.$button-hover-colour;
+        }
+    }
+}
