@@ -24,6 +24,10 @@
         display: inline-block;
     }
 
+    .bill-panel-part:hover {
+        color: theme.$cancel-hover-colour;
+    }
+
     .bill-panel-req:hover{
         color: theme.$button-hover-colour;
     }

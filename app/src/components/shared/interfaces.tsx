@@ -5,6 +5,7 @@ export interface Bill {
     amount: bigint
     participants: string[]
     requests: string[]
+    paused: boolean
 }
 
 export interface BillIndex {
