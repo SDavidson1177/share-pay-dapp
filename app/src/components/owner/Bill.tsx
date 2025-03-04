@@ -62,7 +62,8 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
         }
     }
 
-    return (<>{bills?.map(v => {return(
+    return (<>{bills?.map(v => {
+            return(
             <div key={v.title} className='bill-panel'>
                 <h3 className='bill-panel-title'>{v.title+(v.paused ? " (paused)" : "")}</h3>
                 <div className='bill-panel-metadiv'>
@@ -76,9 +77,9 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                 <h4>Participants</h4>
                 {v.participants.map((part, i) => {
                     return (v.owner == signer?.address ? 
-                        <p key={i} onClick={() => {remove_participant(part, v.title)}} className='bill-panel-part'>{part}</p>
+                        <p key={i} onClick={() => {remove_participant(part, v.title)}} className='bill-panel-part'>{part + (v?.paused_participants && v.paused_participants?.includes(part) ? " (paused)" : "")}</p>
                         :
-                        <p key={i}>{part}</p>
+                        <p key={i}>{(signer?.address == part ? "me" : part) + (v?.paused_participants && v.paused_participants?.includes(part) ? " (paused)" : "")}</p>
                     )
                 })}
                 
@@ -106,8 +107,8 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                         <button onClick={() => {
                             billTitle.current = v.title
                             billOwner.current = v.owner
-                            isPaused.current = v.paused
-                        }} className="bill-panel-pay" type="submit">{v.paused ? "Unpause" : "Pause"}</button>
+                            isPaused.current = v?.paused_participants && signer?.address && v?.paused_participants.includes(signer?.address) ? true : false
+                        }} className="bill-panel-pay" type="submit">{(v?.paused_participants && signer?.address && v?.paused_participants.includes(signer?.address)) ? "Unpause" : "Pause"}</button>
                     </form>
                 </>
                 }
@@ -143,19 +144,22 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
             resp_arr.forEach((v: Result) => {
                 console.log(v.toObject())
                 let v_obj = v.toObject()
-                bill_arr.push({
-                    owner: v_obj.bill.owner,
-                    key: v_obj.bill.title,
-                    title: v_obj.bill.title,
-                    amount: v_obj.bill.amount,
-                    participants: v_obj.bill.participants,
-                    requests: v_obj.bill.requests,
-                    paused: v_obj.paused,
-                })
+                if (v_obj.participants.includes(signer?.address!) || signer?.address! == v_obj.owner) {
+                    bill_arr.push({
+                        owner: v_obj.owner,
+                        key: v_obj.title,
+                        title: v_obj.title,
+                        amount: v_obj.amount,
+                        participants: v_obj.participants,
+                        paused_participants: v_obj.paused_participants,
+                        requests: v_obj.requests,
+                        paused: (v_obj?.paused_participants && v_obj?.paused_participants.length > 0) ?? false,
+                    })
+                }
             })
             setBills(bill_arr)
-        } catch {
-            console.log("No bills present")
+        } catch (err) {
+            console.log(`Error: ${err}: No bills present`)
             setBills([])
         }
     }

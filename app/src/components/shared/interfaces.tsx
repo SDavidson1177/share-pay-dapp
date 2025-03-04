@@ -4,6 +4,7 @@ export interface Bill {
     title: string
     amount: bigint
     participants: string[]
+    paused_participants: string[]
     requests: string[]
     paused: boolean
 }
