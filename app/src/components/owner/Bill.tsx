@@ -1,8 +1,8 @@
 import { useForm } from 'react-hook-form';
 import { useState, useEffect, useRef} from 'react'
-import { Denominations, DenomMultiplier} from '../shared/constants';
+import { DenomMultiplier } from '../shared/constants';
 import { ethers } from 'ethers'
-import { FormUnit } from '../shared/form';
+import { FormUnit, FormTimeUnit } from '../shared/form';
 import { Result } from 'ethers';
 import { weiToEther } from '../../utils/operations';
 import "./Bill.scss"
@@ -20,7 +20,6 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
     const billOwner = useRef<string>()
     const isPaused = useRef<boolean>()
     const [rerender, setRerender] = useState<boolean>(false)
-    const billParticipant = useRef<string>()
 
     useEffect(() => {}, [bills, rerender])
 
@@ -36,7 +35,7 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
         }
     }
 
-    const accept_payment = async (data: any) => {
+    const accept_payment = async () => {
         let tx = await contract?.acceptPayment(billTitle.current)
         console.log(tx)
     }
@@ -47,12 +46,12 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
         console.log(tx)
     }
 
-    const leave_bill = async (data: any) => {
+    const leave_bill = async () => {
         let tx = await contract?.leave(billOwner.current, billTitle.current)
         console.log(tx)
     }
 
-    const pause = async (data: any) => {
+    const pause = async () => {
         if (isPaused.current) {
             let tx = await contract?.unpause(billOwner.current, billTitle.current)
             console.log(tx)
@@ -91,9 +90,13 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                             <p key={i} className='bill-panel-req' onClick={(e) => {accept_request(e, v.title, req)}}>{req}</p>
                         )}
                     </>}
-                    <form onSubmit={handleSubmit(accept_payment)}>
-                            <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
-                    </form>
+                    {v.paused ? 
+                        <p style={{color: "red"}}>Cannot pay bill while it is paused</p>
+                    : 
+                        <form onSubmit={handleSubmit(accept_payment)}>
+                                <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
+                        </form>
+                    }
                 </>
                 :
                 <>
@@ -117,6 +120,10 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
 }
 
 export function BillPanel({contract, signer} : {contract: ethers.Contract | undefined, signer: ethers.JsonRpcSigner | undefined}) {
+    const ErrNoName = new Error("missing bill name")
+    const ErrNoCost = new Error("cost must be a value greater than zero")
+    const ErrNoInterval = new Error("payment interval must be a value greater than zero")
+    
     const {
         register,
         handleSubmit,
@@ -127,13 +134,30 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
     const create_bill = async (data: any) => {
         console.log(JSON.stringify(data))
 
-        // submit the transactions
-        let tx = await contract?.createBill.populateTransaction(data.name, ethers.parseUnits(data.cost, DenomMultiplier.get(data.unit)), 100)
-        console.log(tx)
-        let prom = await signer?.sendTransaction(tx!)
-        await prom?.wait()
+        try {
+            // sanity checks
+            if ((data?.name ?? "") == "") {
+                throw ErrNoName
+            }
 
-        list_bills()
+            if ((data?.cost ?? 0) <= 0) {
+                throw ErrNoCost
+            }
+
+            if ((data?.timeValue ?? 0) <= 0) {
+                throw ErrNoInterval
+            }
+           
+            // submit the transactions
+            let tx = await contract?.createBill.populateTransaction(data.name, ethers.parseUnits(data.cost, DenomMultiplier.get(data.unit)), data.timeValue * data.timeUnit)
+            console.log(tx)
+            let prom = await signer?.sendTransaction(tx!)
+            await prom?.wait()
+
+            list_bills()
+        } catch (err) {
+            alert(err)
+        }
     }
 
     const list_bills = async () => {
@@ -183,6 +207,7 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
                     <input type='number' {...register("cost")}></input>
                 </label>
                 <FormUnit register={register}></FormUnit><br></br>
+                <FormTime register={register}></FormTime><br></br>
                 <button type='submit' >Create</button>
             </form>
             <h3>Bills:</h3>
