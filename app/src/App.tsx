@@ -10,6 +10,7 @@ import { Deposit } from './components/shared/DepositWithdraw'
 import { weiToEther } from './utils/operations'
 import { RequestJoin } from './components/participant/RequestJoin'
 import { PendingRequests } from './components/participant/PendingRequests'
+import Menu from "./components/shared/Menu"
 
 const MAINNET_RPC_URL = 'https://mainnet.infura.io/v3/c0c003cf22e54b4da6d8bc36339d340c'
 
@@ -132,16 +133,17 @@ function App() {
           <h3>Wallet: {wallet.accounts[0].address}</h3>
           <h3>Contract Address: {contractAddress}</h3>
           <h3>SharePay Balance: {balance ? weiToEther(balance) : 0} ETH</h3>
-          <Deposit contract={contract.current} signer={signer.current} setBalance={(v: bigint) => {
-            setBalance(v);
-          }}></Deposit>
 
-          {/* Bill Interaction */}
-          <BillPanel contract={contract.current} signer={signer.current}/>
+          <Menu components={[
+            <Deposit contract={contract.current} signer={signer.current} setBalance={(v: bigint) => {
+              setBalance(v);
+            }}></Deposit>,
 
-          <RequestJoin contract={contract.current} signer={signer.current} rerender={renderPendingRequests}/>
+            <BillPanel contract={contract.current} signer={signer.current}/>,
 
-          <PendingRequests contract={contract.current} signer={signer.current} rerender={pendingRerender}/>
+            <><RequestJoin contract={contract.current} signer={signer.current} rerender={renderPendingRequests}/>
+            <PendingRequests contract={contract.current} signer={signer.current} rerender={pendingRerender}/></>,
+          ]}></Menu>
 
           <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
             Disconnect

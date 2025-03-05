@@ -55,6 +55,7 @@ export function Deposit({contract, signer, setBalance} : {contract: ethers.Contr
     }
 
     return (<>
+        <h3>Deposit or Withdraw</h3>
         <form id="deposit-withdraw-form" onSubmit={handleSubmit(submitForm)}>
             <label>
                 Amount:

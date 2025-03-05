@@ -1,0 +1,44 @@
+@use '../../theme.scss';
+
+.menu {
+    margin: auto;
+    width: 100%;
+    padding-top: 20px;
+    padding-bottom: 5px;
+
+    .menu-data-template {
+        font-size: large;
+        color: theme.$text-color;
+        width: 22%;
+        padding-top: 15px;
+        padding-bottom: 20px;
+        border-bottom-width: 4px;
+        border-bottom-color: theme.$text-color;
+        border-bottom-style: solid;
+        background-color: theme.$table-data-background-colour;
+
+        &:hover {
+            border-color: theme.$button-hover-colour;
+        }
+    }
+
+    .menu-data {
+        @extend .menu-data-template;
+
+        &:active {
+            background-color: theme.$table-data-background-active-colour;
+            border-color: theme.$button-active-colour;
+        }
+    }
+
+    .menu-data-active {
+        @extend .menu-data-template;
+        background-color: theme.$table-data-background-active-colour;
+        border-color: theme.$button-active-colour;
+    }
+}
+
+.main-panel {
+    width: 100%;
+    min-height: 380px;
+}
