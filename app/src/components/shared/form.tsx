@@ -14,14 +14,14 @@ export function FormUnit({register} : {register: UseFormRegister<FieldValues>}) 
     )
 }
 
-export function FormTime({register} : {register: UseFormRegister<FieldValues>}) {
+export function FormTime({register, timeId, label} : {register: UseFormRegister<FieldValues>, timeId: string, label: string}) {
     return (<>
-        <label>Payment Interval:
-            <input type="number" {...register("timeValue")}/>
+        <label>{label}:
+            <input type="number" {...register(timeId + "_timeValue")}/>
         </label>
         <label>
             Unit:
-            <select {...register("timeUnit")}>
+            <select {...register(timeId + "_timeUnit")}>
                 <option value={SECONDS}>seconds</option>
                 <option value={MINUTES}>minutes</option>
                 <option value={HOURS}>hours</option>

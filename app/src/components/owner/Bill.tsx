@@ -2,7 +2,7 @@ import { useForm } from 'react-hook-form';
 import { useState, useEffect, useRef} from 'react'
 import { DenomMultiplier } from '../shared/constants';
 import { ethers } from 'ethers'
-import { FormUnit, FormTimeUnit } from '../shared/form';
+import { FormUnit, FormTime } from '../shared/form';
 import { Result } from 'ethers';
 import { weiToEther } from '../../utils/operations';
 import "./Bill.scss"
@@ -62,6 +62,9 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
     }
 
     return (<>{bills?.map(v => {
+            let payment_time = v?.last_payment == 0 ? v?.start_payment : v?.last_payment + v?.delta
+            let next_payment = new Date(payment_time * 1000)
+            const can_pay = new Date(Date.now()) >= next_payment
             return(
             <div key={v.title} className='bill-panel'>
                 <h3 className='bill-panel-title'>{v.title+(v.paused ? " (paused)" : "")}</h3>
@@ -71,6 +74,7 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                 <div className='bill-panel-metadiv'>
                     <p>Number of participants: {v.participants.length + 1}</p>
                 </div>
+                <p>Next Payment: {next_payment.toUTCString()}</p>
                 <h4>Owner</h4>
                 <p>{v.owner == signer?.address ? "me" : v.owner}</p>
                 <h4>Participants</h4>
@@ -90,13 +94,13 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                             <p key={i} className='bill-panel-req' onClick={(e) => {accept_request(e, v.title, req)}}>{req}</p>
                         )}
                     </>}
-                    {v.paused ? 
-                        <p style={{color: "red"}}>Cannot pay bill while it is paused</p>
-                    : 
+                    { v.paused ? <p style={{color: "red"}}>Cannot pay bill while it is paused</p> : (
+                        can_pay ? 
                         <form onSubmit={handleSubmit(accept_payment)}>
-                                <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
-                        </form>
-                    }
+                            <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
+                        </form> :
+                        <button onClick={() => {alert("Payment is not due at this time.")}} className="bill-panel-pay-inactive" type="submit">Pay Bills</button>
+                    )}
                 </>
                 :
                 <>
@@ -123,6 +127,7 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
     const ErrNoName = new Error("missing bill name")
     const ErrNoCost = new Error("cost must be a value greater than zero")
     const ErrNoInterval = new Error("payment interval must be a value greater than zero")
+    const ErrNoStart = new Error("must provide a start time that is zero or greater")
     
     const {
         register,
@@ -144,12 +149,17 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
                 throw ErrNoCost
             }
 
-            if ((data?.timeValue ?? 0) <= 0) {
+            if ((data?.interval_timeValue ?? 0) <= 0) {
                 throw ErrNoInterval
+            }
+
+            if ((data?.start_timeValue ?? 0) < 0) {
+                throw ErrNoStart
             }
            
             // submit the transactions
-            let tx = await contract?.createBill.populateTransaction(data.name, ethers.parseUnits(data.cost, DenomMultiplier.get(data.unit)), data.timeValue * data.timeUnit)
+            let tx = await contract?.createBill.populateTransaction(data.name, ethers.parseUnits(data.cost, DenomMultiplier.get(data.unit)), 
+            data.interval_timeValue * data.interval_timeUnit, Math.trunc(Date.now()/1000) + ((data?.start_timeValue ?? 0) * data.start_timeUnit))
             console.log(tx)
             let prom = await signer?.sendTransaction(tx!)
             await prom?.wait()
@@ -178,6 +188,9 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
                         paused_participants: v_obj.paused_participants,
                         requests: v_obj.requests,
                         paused: (v_obj?.paused_participants && v_obj?.paused_participants.length > 0) ?? false,
+                        last_payment: Number(v_obj.last_payment),
+                        delta: Number(v_obj.delta),
+                        start_payment: Number(v_obj.start_payment)
                     })
                 }
             })
@@ -207,7 +220,8 @@ export function BillPanel({contract, signer} : {contract: ethers.Contract | unde
                     <input type='number' {...register("cost")}></input>
                 </label>
                 <FormUnit register={register}></FormUnit><br></br>
-                <FormTime register={register}></FormTime><br></br>
+                <FormTime register={register} timeId={"interval"} label={"Payment Interval"}></FormTime><br></br>
+                <FormTime register={register} timeId={"start"} label={"Start payments in"}></FormTime><br></br>
                 <button type='submit' >Create</button>
             </form>
             <h3>Bills:</h3>

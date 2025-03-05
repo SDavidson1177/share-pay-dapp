@@ -7,6 +7,9 @@ export interface Bill {
     paused_participants: string[]
     requests: string[]
     paused: boolean
+    delta: number
+    last_payment: number
+    start_payment: number
 }
 
 export interface BillIndex {

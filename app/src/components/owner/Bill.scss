@@ -40,4 +40,10 @@
             border-color: theme.$button-hover-colour;
         }
     }
+
+    .bill-panel-pay-inactive {
+        border: 2px solid theme.$border-colour-inactive;
+        color: theme.$text-colour-inactive;
+        margin-bottom: 10px;
+    }
 }
