@@ -128,6 +128,9 @@ function App() {
         </button>
       ) : (
         <>
+          <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
+              Disconnect
+          </button>
           <h3>Chain: {connectedChain?.id && 
           (chainIdMap.get(connectedChain?.id) ? chainIdMap.get(connectedChain?.id) : "Unsupported")}</h3>
           <h3>Wallet: {wallet.accounts[0].address}</h3>
@@ -144,10 +147,6 @@ function App() {
             <><RequestJoin contract={contract.current} signer={signer.current} rerender={renderPendingRequests}/>
             <PendingRequests contract={contract.current} signer={signer.current} rerender={pendingRerender}/></>,
           ]}></Menu>
-
-          <button style={{ padding: 10, margin: 10 }} onClick={disconnect_wallet}>
-            Disconnect
-          </button>
         </>
       )}
     </>

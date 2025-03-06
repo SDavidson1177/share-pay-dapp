@@ -41,6 +41,12 @@
         }
     }
 
+    .bill-panel-pay-cancel {
+        @extend .bill-panel-pay;
+        border-color: red;
+        background-color: rgb(255, 225, 225);
+    }
+
     .bill-panel-pay-inactive {
         border: 2px solid theme.$border-colour-inactive;
         color: theme.$text-colour-inactive;

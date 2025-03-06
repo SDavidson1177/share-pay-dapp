@@ -51,6 +51,11 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
         console.log(tx)
     }
 
+    const cancel_bill = async () => {
+        let tx = await contract?.cancelBill(billTitle.current)
+        console.log(tx)
+    }
+
     const pause = async () => {
         if (isPaused.current) {
             let tx = await contract?.unpause(billOwner.current, billTitle.current)
@@ -101,6 +106,9 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                         </form> :
                         <button onClick={() => {alert("Payment is not due at this time.")}} className="bill-panel-pay-inactive" type="submit">Pay Bills</button>
                     )}
+                    <form onSubmit={handleSubmit(cancel_bill)}>
+                        <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay-cancel" type="submit">Cancel Bill</button>
+                    </form>
                 </>
                 :
                 <>
