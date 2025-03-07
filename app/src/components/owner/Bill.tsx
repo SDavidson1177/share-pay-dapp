@@ -1,6 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { useState, useEffect, useRef} from 'react'
-import { DenomMultiplier } from '../shared/constants';
+import { DenomMultiplier, getTimeIntervalString } from '../shared/constants';
 import { ethers } from 'ethers'
 import { FormUnit, FormTime } from '../shared/form';
 import { Result } from 'ethers';
@@ -14,12 +14,14 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
     const {
         register,
         handleSubmit,
-        } = useForm();
+    } = useForm();
     
     const billTitle = useRef<string>()
     const billOwner = useRef<string>()
     const isPaused = useRef<boolean>()
     const [rerender, setRerender] = useState<boolean>(false)
+    const [adjustPI, setAdjustPI] = useState<boolean>(false)
+    const adjType = useRef<string>("none") // Can be either "none", "cancel" or "submit"
 
     useEffect(() => {}, [bills, rerender])
 
@@ -52,8 +54,23 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
     }
 
     const cancel_bill = async () => {
-        let tx = await contract?.cancelBill(billTitle.current)
-        console.log(tx)
+        if (confirm(`Are you sure you want to cancel "${billTitle.current}"?`)) {
+            let tx = await contract?.cancelBill(billTitle.current)
+            console.log(tx)
+        }
+    }
+
+    const adjust_interval = async (data: any) => {
+        if (adjType.current == "cancel") {
+            setAdjustPI(false)
+            return
+        }
+        
+        let time_adjustment: number = data.adj_timeValue * data.adj_timeUnit;
+        if (confirm(`Are you sure you want to adjust the next payment time for ${billTitle.current} by ${getTimeIntervalString(time_adjustment)}?`)) {
+            let tx = await contract?.adjustBillLastPayment(billTitle.current, time_adjustment)
+            console.log(tx)
+        }
     }
 
     const pause = async () => {
@@ -80,6 +97,22 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                     <p>Number of participants: {v.participants.length + 1}</p>
                 </div>
                 <p>Next Payment: {next_payment.toUTCString()}</p>
+                {v.owner == signer?.address ? (adjustPI ?  
+                    <form onSubmit={handleSubmit(adjust_interval)}>
+                        <FormTime register={register} timeId="adj" label="Adjustment" ></FormTime><br></br>
+                        <button onClick={() => {
+                            adjType.current = "submit"
+                            billTitle.current = v.title
+                            }}>Submit</button>
+                        <button onClick={() => {
+                            adjType.current = "cancel"
+                            billTitle.current = v.title
+                            }}>Cancel</button>
+                    </form>
+                :
+                    <button onClick={() => {setAdjustPI(true)}}>Adjust Next Payment</button>
+                ) : <></>}
+                <p>Payment Interval: {getTimeIntervalString(v.delta)}</p>
                 <h4>Owner</h4>
                 <p>{v.owner == signer?.address ? "me" : v.owner}</p>
                 <h4>Participants</h4>
@@ -104,7 +137,7 @@ function BillList({bills, contract, signer} : {bills: Bill[] | undefined, contra
                         <form onSubmit={handleSubmit(accept_payment)}>
                             <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay" type="submit">Pay Bill</button>
                         </form> :
-                        <button onClick={() => {alert("Payment is not due at this time.")}} className="bill-panel-pay-inactive" type="submit">Pay Bills</button>
+                        <button onClick={() => {alert("Payment is not due at this time.")}} className="bill-panel-pay-inactive" type="submit">Pay Bill</button>
                     )}
                     <form onSubmit={handleSubmit(cancel_bill)}>
                         <button onClick={() => {billTitle.current = v.title}} className="bill-panel-pay-cancel" type="submit">Cancel Bill</button>
